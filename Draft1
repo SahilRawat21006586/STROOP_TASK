@@ -1,0 +1,159 @@
+import pygame
+import random
+import time
+import csv
+
+# Initialize pygame
+pygame.init()
+
+# Set up display to be full screen
+win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+WIDTH, HEIGHT = win.get_size()
+pygame.display.set_caption("Stroop Task")
+
+# Define colors
+COLORS = {
+    "RED": (255, 0, 0),
+    "GREEN": (0, 255, 0),
+    "BLUE": (0, 0, 255),
+    "YELLOW": (255, 255, 0)
+}
+
+# Define keys for responses
+KEYS = {
+    pygame.K_a: "RED",
+    pygame.K_s: "GREEN",
+    pygame.K_d: "BLUE",
+    pygame.K_f: "YELLOW"
+}
+
+# Font setup
+def get_scaled_font(size):
+    return pygame.font.Font(None, size)
+
+font = get_scaled_font(int(HEIGHT * 0.1))
+title_font = get_scaled_font(int(HEIGHT * 0.12))
+small_font = get_scaled_font(int(HEIGHT * 0.06))
+
+# Instructions screen
+def show_instructions():
+    win.fill((255, 255, 255))
+    title = title_font.render("Welcome to the Stroop Task", True, (0, 0, 0))
+    instructions = [
+        "You will see words displayed in different colors.",
+        "Your task is to press the key corresponding to the COLOR of the word:",
+        "A = Red, S = Green, D = Blue, F = Yellow.",
+        "Try to be as quick and accurate as possible!",
+        "First, you will have a short practice round that won't be recorded.",
+        "After the practice, the real task will begin.",
+        "Press SPACE to start or ESC to quit."
+    ]
+    win.blit(title, (WIDTH // 2 - title.get_width() // 2, HEIGHT * 0.1))
+    
+    for i, line in enumerate(instructions):
+        text = small_font.render(line, True, (0, 0, 0))
+        win.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT * 0.3 + i * (HEIGHT * 0.07)))
+    
+    pygame.display.flip()
+    
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    waiting = False
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
+
+# Practice round
+def practice_round():
+    practice_trials = 3
+    for _ in range(practice_trials):
+        word = random.choice(list(COLORS.keys()))
+        color = random.choice(list(COLORS.values()))
+        
+        win.fill((255, 255, 255))
+        text = font.render(word, True, color)
+        win.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+        pygame.display.flip()
+        
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key in KEYS or event.key == pygame.K_ESCAPE:
+                        waiting = False
+        pygame.time.delay(500)
+    
+    win.fill((255, 255, 255))
+    transition_text = small_font.render("Practice round over. The real task begins now!", True, (0, 0, 0))
+    win.blit(transition_text, (WIDTH // 2 - transition_text.get_width() // 2, HEIGHT // 2))
+    pygame.display.flip()
+    time.sleep(2)
+
+# Stroop trials
+trials = []
+num_trials = 50  # Updated to 50 trials
+for _ in range(num_trials):
+    word = random.choice(list(COLORS.keys()))
+    color = random.choice(list(COLORS.values()))
+    congruent = COLORS[word] == color
+    trials.append((word, color, congruent))
+
+# Data storage
+results = []
+
+# Show instructions before starting the task
+show_instructions()
+
+# Run practice round
+practice_round()
+
+# Task loop
+running = True
+trial_index = 0
+
+while running and trial_index < num_trials:
+    word, color, congruent = trials[trial_index]
+    win.fill((255, 255, 255))
+    text = font.render(word, True, color)
+    win.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+    pygame.display.flip()
+    
+    start_time = time.time()
+    response = None
+    
+    while response is None:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                break
+            if event.type == pygame.KEYDOWN:
+                if event.key in KEYS:
+                    response = KEYS[event.key]
+                    reaction_time = time.time() - start_time
+                    accuracy = 1 if response == word else 0
+                    results.append([trial_index + 1, word, color, congruent, response, reaction_time, accuracy])
+                    trial_index += 1
+                    break
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                    break
+    
+    pygame.time.delay(500)
+
+# Save results to CSV manually
+with open("stroop_results.csv", "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerow(["Trial", "Word", "Color", "Congruent", "Response", "ReactionTime", "Accuracy"])
+    writer.writerows(results)
+
+# Quit pygame
+pygame.quit()
