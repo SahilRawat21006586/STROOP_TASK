@@ -19,12 +19,12 @@ COLORS = {
     "YELLOW": (255, 255, 0)
 }
 
-# Define keys for responses
+# Define keys for responses based on first letter
 KEYS = {
-    pygame.K_a: "RED",
-    pygame.K_s: "GREEN",
-    pygame.K_d: "BLUE",
-    pygame.K_f: "YELLOW"
+    pygame.K_r: "RED",
+    pygame.K_g: "GREEN",
+    pygame.K_b: "BLUE",
+    pygame.K_y: "YELLOW"
 }
 
 # Font setup
@@ -42,7 +42,7 @@ def show_instructions():
     instructions = [
         "You will see words displayed in different colors.",
         "Your task is to press the key corresponding to the COLOR of the word:",
-        "A = Red, S = Green, D = Blue, F = Yellow.",
+        "R = Red, G = Green, B = Blue, Y = Yellow.",
         "Try to be as quick and accurate as possible!",
         "First, you will have a short practice round that won't be recorded.",
         "After the practice, the real task will begin.",
