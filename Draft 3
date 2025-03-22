@@ -7,17 +7,17 @@ import csv
 # Initialize pygame
 pygame.init()
 
-# Set up windowed mode (800x600 resolution)
-WIDTH, HEIGHT = 800, 600
-win = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+# Set up full window mode
+WIDTH, HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
+win = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("Stroop Task")
 
-# Define colors
+# Define colors (Improved Yellow for Better Contrast)
 COLORS = {
     "RED": (255, 0, 0),
-    "GREEN": (0, 255, 0),
+    "GREEN": (0, 200, 0),
     "BLUE": (0, 0, 255),
-    "YELLOW": (255, 255, 0)
+    "YELLOW": (255, 244, 79)  # Lemon Yellow for bright contrast
 }
 
 # Define keys for responses
@@ -97,10 +97,10 @@ def show_instructions():
 
 # Practice round with feedback
 def practice_round():
-    font = get_scaled_font(int(HEIGHT * 0.2))  # Make words large
+    font = get_scaled_font(int(HEIGHT * 0.2))  # Large words
     for _ in range(5):
-        word = random.choice(list(COLORS.keys()))  # Word displayed
-        color_name, color_rgb = random.choice(list(COLORS.items()))  # Ink color
+        word = random.choice(list(COLORS.keys()))
+        color_name, color_rgb = random.choice(list(COLORS.items()))
 
         win.fill((255, 255, 255))
         text = font.render(word, True, color_rgb)
@@ -115,7 +115,7 @@ def practice_round():
                 if event.type == pygame.KEYDOWN:
                     if event.key in KEYS:
                         response = KEYS[event.key]
-                        correct = response == color_name  # Compare response to the color name
+                        correct = response == color_name  # Compare response to color name
                         
                         # Show feedback
                         feedback_text = "Correct!" if correct else "Wrong!"
@@ -124,6 +124,12 @@ def practice_round():
                         win.blit(feedback, (WIDTH // 2 - feedback.get_width() // 2, HEIGHT * 0.8))
                         pygame.display.flip()
                         time.sleep(1)  # Show feedback for 1 second
+
+                        # Black screen transition after response
+                        win.fill((0, 0, 0))
+                        pygame.display.flip()
+                        time.sleep(0.5)
+
                         break
                     if event.key == pygame.K_ESCAPE:
                         confirm_exit()
@@ -164,7 +170,7 @@ practice_round()
 # Start the real Stroop task
 trials = generate_trials()
 trial_index = 0
-font = get_scaled_font(int(HEIGHT * 0.2))  # Ensure large words
+font = get_scaled_font(int(HEIGHT * 0.2))  # Large words
 
 while trial_index < len(trials):
     word, color_rgb, correct_color_name, congruent = trials[trial_index]
@@ -184,21 +190,16 @@ while trial_index < len(trials):
             if event.type == pygame.KEYDOWN:
                 if event.key in KEYS:
                     response = KEYS[event.key]
-                    reaction_time = time.time() - start_time
-                    accuracy = 1 if response == correct_color_name else 0  # Compare response to color name
-                    results.append([trial_index + 1, word, correct_color_name, congruent, response, reaction_time, accuracy])
-                    trial_index += 1
                     break
                 if event.key == pygame.K_ESCAPE:
                     confirm_exit()
     
-    pygame.time.delay(500)
+    # Black screen after response
+    win.fill((0, 0, 0))
+    pygame.display.flip()
+    time.sleep(0.5)
 
-# Save results
-with open("stroop_results.csv", "w", newline="") as file:
-    writer = csv.writer(file)
-    writer.writerow(["Trial", "Word", "Color", "Congruent", "Response", "ReactionTime", "Accuracy"])
-    writer.writerows(results)
+    pygame.time.delay(500)
 
 # Quit pygame
 quit_game()
